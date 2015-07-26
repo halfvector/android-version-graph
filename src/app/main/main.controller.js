@@ -11,21 +11,48 @@
 
         vm.awesomeThings = [];
 
+        var layers = [
+            [
+                { x: 0, y: 6 },
+                { x: 1, y: 6 },
+                { x: 2, y: 6 },
+                { x: 3, y: 5 },
+                { x: 4, y: 4 },
+                { x: 5, y: 1 },
+                { x: 6, y: 0 },
+                { x: 7, y: 0 }
+            ], [
+                { x: 0, y: 0 },
+                { x: 1, y: 0 },
+                { x: 2, y: 0 },
+                { x: 3, y: 1 },
+                { x: 4, y: 2 },
+                { x: 5, y: 4 },
+                { x: 6, y: 3 },
+                { x: 7, y: 1 }
+            ], [
+                { x: 0, y: 0 },
+                { x: 1, y: 0 },
+                { x: 2, y: 0 },
+                { x: 3, y: 0 },
+                { x: 4, y: 0 },
+                { x: 5, y: 1 },
+                { x: 6, y: 3 },
+                { x: 7, y: 5 }
+            ]
+        ];
+
         buildGraph();
 
         function buildGraph() {
 
-            var n = 20, // number of layers
-                m = 200, // number of samples per layer
-                stack = d3.layout.stack().offset("wiggle"),
-                layers0 = stack(d3.range(n).map(function() {
-                    return bumpLayer(m);
-                })),
-                layers1 = stack(d3.range(n).map(function() {
-                    return bumpLayer(m);
-                }));
+            var n = 3, // number of layers
+                m = 8, // number of samples per layer
+                stack = d3.layout.stack();//.offset("wiggle");
 
-            var width = 960,
+            var versionsLayer = stack(layers);
+
+            var width = 1200,
                 height = 500;
 
             var x = d3.scale.linear()
@@ -33,15 +60,14 @@
                 .range([0, width]);
 
             var y = d3.scale.linear()
-                .domain([0, d3.max(layers0.concat(layers1), function(layer) {
+                .domain([0, d3.max(versionsLayer, function(layer) {
                     return d3.max(layer, function(d) {
                         return d.y0 + d.y;
                     });
                 })])
-                .range([height, 0]);
+                .range([0, height]);
 
-            var color = d3.scale.linear()
-                .range(["#aad", "#556"]);
+            var color = d3.scale.category10();
 
             var area = d3.svg.area()
                 .x(function(d) {
@@ -59,24 +85,12 @@
                 .attr("height", height);
 
             svg.selectAll("path")
-                .data(layers0)
+                .data(versionsLayer)
                 .enter().append("path")
                 .attr("d", area)
                 .style("fill", function() {
                     return color(Math.random());
                 });
-
-            function transition() {
-                d3.selectAll("path")
-                    .data(function() {
-                        var d = layers1;
-                        layers1 = layers0;
-                        return layers0 = d;
-                    })
-                    .transition()
-                    .duration(2500)
-                    .attr("d", area);
-            }
 
             // Inspired by Lee Byron's test data generator.
             function bumpLayer(n) {
